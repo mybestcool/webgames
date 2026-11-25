@@ -1,5 +1,5 @@
 import {games} from './games.js';
-import {prepareGame, protectStorage, byteLabel, controlsPage} from './pwa.js';
+import {prepareGame, protectStorage, byteLabel, controlsPage, appDisplay} from './pwa.js';
 
 const machine = document.querySelector('.machine');
 const lobby = document.querySelector('#club-lobby');
@@ -19,8 +19,11 @@ const controls = document.querySelector('.game-controls');
 const openTab = document.querySelector('#open-game-tab');
 const leave = document.querySelector('#leave');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+const touchScreen = matchMedia('(any-pointer: coarse)');
+const fullscreenDisplay = matchMedia('(display-mode: fullscreen)');
 let game, frame, state = 'shelf', generation = 0, hasPlayed = false;
 let requestedFullscreen = false;
+let requestedLandscape = false;
 let workerReportsProgress = false;
 let checkAfterLoad = false;
 let recoveryTimer;
@@ -37,9 +40,23 @@ function watchLoading() {
 let pendingSave, unlockSaves, syncFailed = false;
 
 const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+function requestLandscape() {
+  if (machine.dataset.layout !== 'landscape' || !touchScreen.matches || !screen.orientation?.lock) return;
+  requestedLandscape = true;
+  screen.orientation.lock('landscape').catch(() => { /* A portrait viewport uses the rotated game surface. */ });
+}
+function releaseLandscape() {
+  if (!requestedLandscape) return;
+  requestedLandscape = false;
+  try { screen.orientation.unlock(); } catch { /* The browser may already have released its lock. */ }
+}
 let screenNoticeTimer;
 function updateScreenButton() {
   const full = Boolean(fullscreenElement());
+  const canEnter = (document.fullscreenEnabled && document.documentElement.requestFullscreen) ||
+    (document.webkitFullscreenEnabled && document.documentElement.webkitRequestFullscreen);
+  screenButton.hidden = appDisplay.matches || Boolean(navigator.standalone) ||
+    (!full && (fullscreenDisplay.matches || !canEnter));
   const label = full ? '切换为窗口' : '全屏游玩';
   screenButton.title = label;
   screenButton.setAttribute('aria-label', label);
@@ -53,7 +70,7 @@ function screenNotice(text) {
   screenNoticeTimer = setTimeout(() => { screenStatus.hidden = true; }, 3400);
 }
 screenButton.addEventListener('click', async () => {
-  if (state !== 'playing') return;
+  if (state !== 'playing' || screenButton.hidden) return;
   frame.contentWindow.clubGame?.unlockAudio?.();
   const run = generation;
   const root = document.documentElement;
@@ -64,6 +81,7 @@ screenButton.addEventListener('click', async () => {
       await (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
       requestedFullscreen = true;
       if (run !== generation) exitFullscreen();
+      else requestLandscape();
     } else {
       screenNotice('当前窗口不支持切换全屏。');
     }
@@ -73,6 +91,8 @@ screenButton.addEventListener('click', async () => {
 });
 document.addEventListener('fullscreenchange', updateScreenButton);
 document.addEventListener('webkitfullscreenchange', updateScreenButton);
+appDisplay.addEventListener('change', updateScreenButton);
+fullscreenDisplay.addEventListener('change', updateScreenButton);
 function exitFullscreen() {
   if (!requestedFullscreen || !fullscreenElement()) return;
   requestedFullscreen = false;
@@ -106,6 +126,8 @@ function showLoading(detail, value = null, note = '') {
 }
 function reset() {
   clearTimeout(recoveryTimer);
+  releaseLandscape();
+  delete machine.dataset.layout;
   generation++;
   frame?.remove();
   frame = null;
@@ -196,6 +218,7 @@ async function back() {
 }
 function fail(detail) {
   clearTimeout(recoveryTimer);
+  releaseLandscape();
   state = 'error';
   message('卡带载入失败', detail);
   action('重新载入', () => launch(game));
@@ -245,6 +268,8 @@ async function launch(choice) {
     return;
   }
   state = 'loading';
+  machine.dataset.layout = game.orientation === '横屏' ? 'landscape' : 'portrait';
+  requestLandscape();
   openTab.href = './?game=' + game.id;
   document.body.dataset.game = game.id;
   document.title = game.title + ' · 放学卡带社';
@@ -388,8 +413,8 @@ let drag, moved = false;
 controls.addEventListener('pointerdown', event => {
   const button = event.target.closest('button');
   if (!button || !event.isPrimary || event.button !== 0) return;
-  const box = controls.getBoundingClientRect();
-  drag = {id:event.pointerId, x:event.clientX, y:event.clientY, left:box.left, top:box.top};
+  const rotated = getComputedStyle(machine).transform !== 'none';
+  drag = {id:event.pointerId, x:event.clientX, y:event.clientY, left:controls.offsetLeft, top:controls.offsetTop, rotated};
   moved = false;
   button.setPointerCapture(event.pointerId);
 });
@@ -398,8 +423,10 @@ controls.addEventListener('pointermove', event => {
   const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
   if (!moved && Math.hypot(dx, dy) < 7) return;
   moved = true;
-  controls.style.left = Math.max(0, Math.min(innerWidth - controls.offsetWidth, drag.left + dx)) + 'px';
-  controls.style.top = Math.max(0, Math.min(innerHeight - controls.offsetHeight, drag.top + dy)) + 'px';
+  const left = drag.left + (drag.rotated ? dy : dx);
+  const top = drag.top + (drag.rotated ? -dx : dy);
+  controls.style.left = Math.max(0, Math.min(session.clientWidth - controls.offsetWidth, left)) + 'px';
+  controls.style.top = Math.max(0, Math.min(session.clientHeight - controls.offsetHeight, top)) + 'px';
 });
 controls.addEventListener('lostpointercapture', () => { drag = null; });
 controls.addEventListener('click', event => {

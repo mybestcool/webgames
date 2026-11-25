@@ -88,11 +88,11 @@ export const byteLabel = value => (value / 1048576).toFixed(1) + ' MiB';
 export function protectStorage() {
   navigator.storage?.persist?.().catch(() => {});
 }
+export const appDisplay = matchMedia('(display-mode: standalone), (display-mode: minimal-ui), (display-mode: window-controls-overlay)');
 function initInstall() {
   const panel = document.querySelector('#install-panel');
   const button = document.querySelector('#install-app');
   const help = document.querySelector('#install-help');
-  const standalone = matchMedia('(display-mode: standalone), (display-mode: minimal-ui), (display-mode: window-controls-overlay)');
   const fullscreen = matchMedia('(display-mode: fullscreen)');
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -112,7 +112,7 @@ function initInstall() {
     } catch { /* Display mode still works without storage. */ }
   }
   function render() {
-    if (standalone.matches || navigator.standalone) remember(true);
+    if (appDisplay.matches || navigator.standalone) remember(true);
     panel.hidden = installed || fullscreen.matches || !checked || !(installEvent || canGuide);
     if (panel.hidden) help.hidden = true;
   }
@@ -129,7 +129,7 @@ function initInstall() {
     remember(true);
     render();
   });
-  standalone.addEventListener('change', render);
+  appDisplay.addEventListener('change', render);
   fullscreen.addEventListener('change', render);
   window.addEventListener('storage', event => {
     if (event.key === storageKey || event.key === null) {

@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./offline-files.js?build=4adc8fdc1f51db3903aa');
+importScripts('./offline-files.js?build=5d9440f086b92696b8cb');
 
 const root = self.registration.scope;
 const prefix = 'after-school-v1:' + new URL(root).pathname + ':';
@@ -7,6 +7,10 @@ const marker = new URL('.offline-complete', root).href;
 const jobs = new Map();
 const sharedCache = prefix + 'shared';
 const sharedTransfers = new Map();
+const largeFileSize = 1024 * 1024;
+const largeLimit = self.navigator.connection?.saveData ? 1 : 3;
+let activeLarge = 0;
+const waitingLarge = [];
 const storageLock = prefix + 'maintain-releases';
 const key = (id, version) => prefix + id + ':' + version;
 const totalSize = release => Object.values(release.files).reduce((n, item) => n + item.size, 0);
@@ -120,6 +124,18 @@ async function storeFile(cache, url, file, copy, count) {
   if (await reusable(cache, url, file)) return;
   const previous = await copy();
   if (previous) { await cache.put(url, previous); return; }
+  if (file.size < largeFileSize) return fetchAndStore(cache, url, file, count);
+  // Share the large-buffer budget across both background installs and live frames.
+  if (activeLarge === largeLimit) await new Promise(resolve => waitingLarge.push(resolve));
+  else activeLarge++;
+  try { await fetchAndStore(cache, url, file, count); }
+  finally {
+    const next = waitingLarge.shift();
+    if (next) next();
+    else activeLarge--;
+  }
+}
+async function fetchAndStore(cache, url, file, count) {
   // Reuse the browser's copy only after verifying it against this release.
   // A stale HTTP entry, interrupted stream or transient CDN error gets a fresh request.
   for (const mode of ['force-cache', 'reload']) {
@@ -198,9 +214,9 @@ async function download(id, release, previous, notify, fileReady) {
   }
   // Keep large buffers bounded on phones. Tiny loader and license files need
   // not wait behind multi-megabyte transfers on a high-latency connection.
-  const large = files.filter(([, file]) => file.size >= 1048576).values();
-  const small = files.filter(([, file]) => file.size < 1048576).values();
-  const workers = [next(large), next(large), next(small), next(small), next(small), next(small)];
+  const large = files.filter(([, file]) => file.size >= largeFileSize).values();
+  const small = files.filter(([, file]) => file.size < largeFileSize).values();
+  const workers = [...Array.from({length:largeLimit}, () => next(large)), ...Array.from({length:4}, () => next(small))];
   try { await Promise.all(workers); }
   catch (error) { failed = true; await Promise.allSettled(workers); throw error; }
   await cache.put(marker, Response.json({...info(release), shared:files.map(([path]) => path).filter(p => p.startsWith('shared/'))}));

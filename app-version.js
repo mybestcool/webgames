@@ -1,4 +1,4 @@
 export default {
-  "label": "1.3.0",
-  "version": "d398a183fe7ec4772495"
+  "label": "1.4.0",
+  "version": "1185683275ce8bc3ceb4"
 };
