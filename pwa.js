@@ -20,11 +20,16 @@ function register() {
 async function activeWorker() {
   const sw = serviceWorker;
   // An installed PWA can already have a usable controller while an offline registration fails.
-  if (sw?.controller && sw.controller.state !== 'redundant') return sw.controller;
-  const reg = await register();
-  if (reg.active) return reg.active;
-  const worker = reg.installing || reg.waiting;
+  if (sw?.controller?.state === 'activated') return sw.controller;
+  let reg = await register();
+  if (!reg.active && !reg.installing && !reg.waiting) {
+    // A failed first install may leave an empty registration.
+    registration = undefined;
+    reg = await register();
+  }
+  const worker = reg.active || reg.installing || reg.waiting;
   if (!worker) throw new Error('离线服务未就绪');
+  if (worker.state === 'activated') return worker;
   return new Promise((resolve, reject) => {
     function check() {
       if (!['activated','redundant'].includes(worker.state)) return;
@@ -171,8 +176,20 @@ export function initOfflineTools() {
   shellLabel.textContent = '大厅 v' + appVersion.label;
   shellLabel.title = '构建 ' + appVersion.version;
   let busy = false, pendingReload = false, checking = false, lastCheck = 0;
+  let allReady = false, autoTimer, failures = 0;
+  const lobby = document.querySelector('#club-lobby');
+  function canPrefetch() {
+    return !document.hidden && !lobby.hidden && navigator.onLine && !pendingReload;
+  }
+  function scheduleCache() {
+    if (allReady || busy || autoTimer || failures >= 3 || !canPrefetch()) return;
+    autoTimer = setTimeout(() => {
+      autoTimer = undefined;
+      if (!allReady && canPrefetch()) cacheMissing(false);
+    }, [450, 2500, 10000][failures]);
+  }
   function applyUpdate() {
-    if (pendingReload && !busy && !document.querySelector('#club-lobby').hidden) location.reload();
+    if (pendingReload && !busy && !lobby.hidden) location.reload();
   }
   async function refresh() {
     try {
@@ -185,63 +202,84 @@ export function initOfflineTools() {
         badge.textContent = version.label ? 'v' + version.label : version.version.slice(0, 7);
         badge.title = '构建 ' + version.version;
       }
+      allReady = ready.length === games.length;
       if (!busy) {
         label.textContent = '离线可玩 ' + ready.length + ' / ' + games.length + ' 盘';
-        cacheAll.hidden = ready.length === games.length;
+        cacheAll.hidden = allReady;
       }
     } catch (err) { if (!busy) label.textContent = err.message; }
+    scheduleCache();
   }
   async function checkUpdate() {
     if (checking || !navigator.onLine || document.hidden || Date.now() - lastCheck < 15000) return;
     checking = true;
     lastCheck = Date.now();
-    try { await (await register()).update(); }
+    try {
+      const reg = await register();
+      if (reg.active && !reg.installing && !reg.waiting) await reg.update();
+    }
     catch { /* Keep the installed release usable without a connection. */ }
     finally { checking = false; }
   }
-  cacheAll.onclick = async () => {
+  async function cacheMissing(manual) {
     if (busy) return;
+    clearTimeout(autoTimer);
+    autoTimer = undefined;
     busy = true;
+    let failed = false;
     cacheAll.disabled = true;
     meter.hidden = detail.hidden = false;
     meter.value = 0;
     label.textContent = '正在检查卡带';
     detail.textContent = '';
-    protectStorage();
     try {
-      const {ready, sizes} = await ask({type:'status'});
+      const {ready, shell} = await ask({type:'status'});
+      if (shell && shell.version !== appVersion.version) { pendingReload = true; return; }
       const missing = games.filter(game => !ready.includes(game.id));
-      let total = missing.reduce((n, g) => n + (sizes?.[g.id] || 0), 0);
-      let done = 0;
       for (const game of missing) {
+        // Finish the current cartridge, then yield bandwidth to an active game.
+        if (!manual && !canPrefetch()) break;
         label.textContent = '正在缓存《' + game.title + '》';
-        let size = sizes?.[game.id] || 0;
+        meter.value = 0;
+        detail.textContent = '';
         await prepareGame(game.id, p => {
-          if (!Number.isFinite(p.loaded)) { detail.textContent = p.percent + '%'; return; }
-          total += p.total - size;
-          size = p.total;
-          meter.value = Math.min(99, (done + p.loaded) * 100 / total);
-          detail.textContent = Math.floor(meter.value) + '% · ' + byteLabel(done + p.loaded) + ' / ' + byteLabel(total);
+          meter.value = p.percent;
+          detail.textContent = Number.isFinite(p.loaded) ?
+            p.percent + '% · 已就绪 ' + byteLabel(p.loaded) + ' / ' + byteLabel(p.total) : p.percent + '%';
         }, 'missing');
-        done += size;
       }
-      meter.value = 100;
-      busy = false;
-      await refresh();
+      failures = 0;
     } catch (err) {
+      failed = true;
+      failures++;
       label.textContent = '缓存未完成，' + err.message;
     } finally {
       busy = false;
       cacheAll.disabled = false;
       meter.hidden = detail.hidden = true;
       applyUpdate();
+      if (!pendingReload) {
+        if (failed) scheduleCache();
+        else await refresh();
+      }
     }
+  }
+  cacheAll.onclick = () => {
+    failures = 0;
+    protectStorage();
+    cacheMissing(true);
   };
+  function resume() {
+    failures = 0;
+    checkUpdate();
+    refresh();
+  }
   serviceWorker.addEventListener('controllerchange', refresh);
   window.addEventListener('club-versions', refresh);
-  window.addEventListener('club-shelf', () => { applyUpdate(); refresh(); checkUpdate(); });
-  window.addEventListener('online', checkUpdate);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkUpdate(); refresh(); } });
+  window.addEventListener('club-shelf', () => { applyUpdate(); resume(); });
+  window.addEventListener('online', resume);
+  window.addEventListener('pageshow', event => { if (event.persisted) resume(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) resume(); });
   window.setInterval(checkUpdate, 60000);
   refresh();
   checkUpdate();

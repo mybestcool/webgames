@@ -1,0 +1,6 @@
+# The GitHub release repository is also Wrangler's assets directory.
+/.*
+/wrangler.jsonc
+/node_modules/
+/package*.json
+/_headers

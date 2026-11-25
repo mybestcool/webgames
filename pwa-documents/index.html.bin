@@ -34,7 +34,11 @@
       </div>
     </aside>
     <section id="shelf" class="shelf" aria-labelledby="shelf-title">
-      <header class="shelf-heading"><h2 id="shelf-title" tabindex="-1">卡带架</h2><span id="count"></span></header>
+      <header class="shelf-heading">
+        <div><h2 id="shelf-title" tabindex="-1">卡带架</h2>
+          <p class="remake-note"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h12l3 3v12H4z M7 5v6h9V5 M8 16v4m3-4v4"/><path d="m19 1 1.1 2.9L23 5l-2.9 1.1L19 9l-1.1-2.9L15 5l2.9-1.1z" fill="currentColor" stroke="none"/></svg>全馆游戏均为重制版</p>
+        </div><span id="count"></span>
+      </header>
       <div class="rows" id="rows"></div>
       <noscript>请启用 JavaScript 以载入游戏卡带。</noscript>
       <aside class="offline-tools" hidden>

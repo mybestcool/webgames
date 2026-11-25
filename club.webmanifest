@@ -7,7 +7,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "related_applications": [{"platform":"webapp","url":"./club.webmanifest","id":"https://after-school-cartridge-club.myownmatrix.chatgpt.site/"}],
+  "related_applications": [{"platform":"webapp","url":"./club.webmanifest","id":"https://afterschoolgame.club/"}],
   "background_color": "#1c315d",
   "theme_color": "#1c315d",
   "icons": [

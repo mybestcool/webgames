@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./offline-files.js?build=ca416f7f337fd74675c6');
+importScripts('./offline-files.js?build=4adc8fdc1f51db3903aa');
 
 const root = self.registration.scope;
 const prefix = 'after-school-v1:' + new URL(root).pathname + ':';
@@ -66,10 +66,10 @@ async function checksum(bytes) {
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('');
 }
-async function fetchFile(url, file, progress, signal) {
+async function fetchFile(url, file, progress, signal, cacheMode) {
   const isDocument = url.pathname.endsWith('.html');
   const source = isDocument ? new URL('pwa-documents/' + url.href.slice(root.length) + '.bin', root) : url;
-  const response = await fetch(source, {cache:'reload', credentials:'same-origin', signal});
+  const response = await fetch(source, {cache:cacheMode, credentials:'same-origin', signal});
   if (!response.ok || new URL(response.url).origin !== new URL(root).origin) throw new Error('资源下载失败');
   const bytes = new Uint8Array(file.size);
   let offset = 0;
@@ -120,16 +120,25 @@ async function storeFile(cache, url, file, copy, count) {
   if (await reusable(cache, url, file)) return;
   const previous = await copy();
   if (previous) { await cache.put(url, previous); return; }
-  const cancel = new AbortController();
-  let timer;
-  function tick(n) {
-    clearTimeout(timer);
-    timer = setTimeout(() => cancel.abort(), 45000);
-    count(n);
+  // Reuse the browser's copy only after verifying it against this release.
+  // A stale HTTP entry, interrupted stream or transient CDN error gets a fresh request.
+  for (const mode of ['force-cache', 'reload']) {
+    const cancel = new AbortController();
+    let timer, response;
+    function tick(n) {
+      clearTimeout(timer);
+      timer = setTimeout(() => cancel.abort(), 45000);
+      count(n);
+    }
+    tick(0);
+    try { response = await fetchFile(url, file, tick, cancel.signal, mode); }
+    catch (error) {
+      if (mode === 'reload' || !self.navigator.onLine) throw error;
+      continue;
+    } finally { clearTimeout(timer); }
+    await cache.put(url, response);
+    return;
   }
-  tick(0);
-  try { await cache.put(url, await fetchFile(url, file, tick, cancel.signal)); }
-  finally { clearTimeout(timer); }
 }
 // A launching frame, the cache-all action and another title may all request the
 // same engine. Keep one verified copy and join its in-flight transfer.
@@ -175,8 +184,7 @@ async function download(id, release, previous, notify, fileReady) {
   }
   notify({loaded:0, total, percent:0});
   let failed = false;
-  const queue = files.values();
-  async function next() {
+  async function next(queue) {
     for (const [path, file] of queue) {
       if (failed) break;
       const url = new URL(path, root);
@@ -188,8 +196,11 @@ async function download(id, release, previous, notify, fileReady) {
       fileReady(path);
     }
   }
-  // Two transfers overlap request latency while limiting memory use on phones.
-  const workers = [next(), next()];
+  // Keep large buffers bounded on phones. Tiny loader and license files need
+  // not wait behind multi-megabyte transfers on a high-latency connection.
+  const large = files.filter(([, file]) => file.size >= 1048576).values();
+  const small = files.filter(([, file]) => file.size < 1048576).values();
+  const workers = [next(large), next(large), next(small), next(small), next(small), next(small)];
   try { await Promise.all(workers); }
   catch (error) { failed = true; await Promise.allSettled(workers); throw error; }
   await cache.put(marker, Response.json({...info(release), shared:files.map(([path]) => path).filter(p => p.startsWith('shared/'))}));
@@ -264,7 +275,7 @@ async function prepareGame(id, mode, notify) {
   let releases;
   // The installed worker already contains an integrity-checked catalog. Cold
   // play can start from it without a round trip before opening the game frame.
-  try { releases = mode === 'play' && !previous ? CLUB_FILES.games : await catalog(); }
+  try { releases = !previous && (mode === 'play' || mode === 'missing') ? CLUB_FILES.games : await catalog(); }
   catch {
     if (previous) return previous;
     releases = CLUB_FILES.games;
@@ -286,7 +297,9 @@ async function prepareGame(id, mode, notify) {
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
-    await prepare('shell', CLUB_FILES.shell, null);
+    const start = prefix + 'shell:';
+    const old = (await caches.keys()).reverse().find(name => name.startsWith(start) && name !== key('shell', CLUB_FILES.shell.version));
+    await prepare('shell', CLUB_FILES.shell, old ? {version:old.slice(start.length)} : null);
     await self.skipWaiting();
   })());
 });

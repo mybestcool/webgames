@@ -1,7 +1,7 @@
 self.CLUB_FILES = {
   "shell": {
-    "label": "1.2.2",
-    "version": "8bf9586d38aee38a89fe",
+    "label": "1.3.0",
+    "version": "d398a183fe7ec4772495",
     "files": {
       "assets/club-192.png": {
         "size": 2103,
@@ -56,12 +56,12 @@ self.CLUB_FILES = {
         "sha256": "29b88a2b2fba1db5c153b635f7d167b4eef404ac36cc61b28d81a6284a4cc497"
       },
       "club.css": {
-        "size": 10363,
-        "sha256": "bbe78f8d038bb7675aa04fe21139b1bf99b65a362c7a9a3b114772017b387052"
+        "size": 10519,
+        "sha256": "946b9de1cb88f9ef047b6d0855e900ce0ddc46035589a34cd0e9d769ae0952b5"
       },
       "club.webmanifest": {
-        "size": 730,
-        "sha256": "859401312fbf299ca9d1cb2b2d010b8eaa9b355ec25d2a9ff859daa951265b00"
+        "size": 698,
+        "sha256": "41cce3824dbe798921d324841a76052a889f88e9d39c000e2795b58116867433"
       },
       "game-bridge.js": {
         "size": 5286,
@@ -72,8 +72,8 @@ self.CLUB_FILES = {
         "sha256": "2106e1f6dd72fa1d06da7dbd1ccecb04776f5d17cf02ef904850068cc728b5f0"
       },
       "index.html": {
-        "size": 5592,
-        "sha256": "2d1233edefb835f23fb8094c46901e1acdf306fe560cb24c5cb7f0fe6071a509"
+        "size": 5998,
+        "sha256": "8f5e720a0ae5cec7b941e082921a28bdd0a4f0fc9ea32cbe38ba413e999e7539"
       },
       "legacy-player.js": {
         "size": 104,
@@ -92,12 +92,12 @@ self.CLUB_FILES = {
         "sha256": "fa1195e48ae8189224c7062b4dc384e034ba8d7778b0176e20f00fbc30aa51fc"
       },
       "pwa.js": {
-        "size": 10514,
-        "sha256": "005f7447b2cf685aa268c74655387aba5eaaf304ccd019a3a87e32d1d80ac7fb"
+        "size": 11652,
+        "sha256": "510ff003d22a3dc96c952e3260c808df4993c5d2315b9866c1e5a8eb8da753ad"
       },
       "app-version.js": {
         "size": 76,
-        "sha256": "de0dfcc07e1c7db54ba1999feda301ad40f9e687f8a0588f7c7281cab2015add"
+        "sha256": "899f2672902a45a9150c52b217dcabd9f29765fa24a2ab5044a68545ba654339"
       }
     }
   },
