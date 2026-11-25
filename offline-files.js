@@ -1,7 +1,7 @@
 self.CLUB_FILES = {
   "shell": {
-    "label": "1.4.0",
-    "version": "1185683275ce8bc3ceb4",
+    "label": "1.4.1",
+    "version": "23e8bb0041d5633cbe19",
     "files": {
       "assets/club-192.png": {
         "size": 2103,
@@ -68,12 +68,12 @@ self.CLUB_FILES = {
         "sha256": "1ed8d52434e4b25bec19e868556eb0ac9dc8649f52aef6fddd89733346f83b70"
       },
       "games.js": {
-        "size": 368,
-        "sha256": "2106e1f6dd72fa1d06da7dbd1ccecb04776f5d17cf02ef904850068cc728b5f0"
+        "size": 541,
+        "sha256": "e3bd9e79e27ae27ad21894a4dee7fc2cfb6509e346fcbd430a7958d857962b99"
       },
       "index.html": {
-        "size": 6005,
-        "sha256": "43071aaf26052a3c1411e18200246ee89f77aefa47411f747aa9a7c77bcdeb4e"
+        "size": 6007,
+        "sha256": "f299be4fe6306d5885d4fb6b2b527b9d1c65975a1305e0bfab4234873746fd08"
       },
       "legacy-player.js": {
         "size": 104,
@@ -88,8 +88,8 @@ self.CLUB_FILES = {
         "sha256": "2d1955f88301fe1c7c87a7f507fbb818a91837a3358d12076be5757cbdbdbf3f"
       },
       "player.js": {
-        "size": 18293,
-        "sha256": "23bd20e75c8b2f953cfcb6144042283340256df17840a90e485faa1de5bf9a4d"
+        "size": 18490,
+        "sha256": "9360ef61fbbeae3b66782a80210ea96773dd8635cfadc898ab8287501508e5e4"
       },
       "pwa.js": {
         "size": 11657,
@@ -97,7 +97,7 @@ self.CLUB_FILES = {
       },
       "app-version.js": {
         "size": 76,
-        "sha256": "ca1d016559c0e4c7f069b66eab6b940836cd38273ce6aee775d543bc97e096c9"
+        "sha256": "f6f5c2c5f14c4f96158e44465b231474c56927321aa73b0d6ebe60ebdd23ada9"
       }
     }
   },

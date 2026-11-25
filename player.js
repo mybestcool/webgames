@@ -21,7 +21,7 @@ const leave = document.querySelector('#leave');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const touchScreen = matchMedia('(any-pointer: coarse)');
 const fullscreenDisplay = matchMedia('(display-mode: fullscreen)');
-let game, frame, state = 'shelf', generation = 0, hasPlayed = false;
+let game, frame, state = 'shelf', generation = 0;
 let requestedFullscreen = false;
 let requestedLandscape = false;
 let workerReportsProgress = false;
@@ -37,7 +37,12 @@ function watchLoading() {
     openTab.hidden = window.top === window;
   }, 12000);
 }
-let pendingSave, unlockSaves, syncFailed = false;
+let unlockSaves, syncFailed = false;
+
+function warnBeforeUnload(event) {
+  event.preventDefault();
+  event.returnValue = true;
+}
 
 const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
 function requestLandscape() {
@@ -125,6 +130,7 @@ function showLoading(detail, value = null, note = '') {
   }
 }
 function reset() {
+  window.removeEventListener('beforeunload', warnBeforeUnload);
   clearTimeout(recoveryTimer);
   releaseLandscape();
   delete machine.dataset.layout;
@@ -133,7 +139,6 @@ function reset() {
   frame = null;
   unlockSaves?.();
   unlockSaves = undefined;
-  hasPlayed = false;
   workerReportsProgress = false;
   checkAfterLoad = false;
   syncFailed = false;
@@ -169,12 +174,6 @@ function navigateBack() {
 }
 
 // Give Godot a frame to handle focus loss, then commit its existing save files.
-async function closeGame() {
-  if (!frame || !['playing','closing'].includes(state)) return true;
-  if (pendingSave) return pendingSave;
-  pendingSave = writeSave().finally(() => { pendingSave = undefined; });
-  return pendingSave;
-}
 async function writeSave() {
   state = 'closing';
   let timeout, renew, active = true;
@@ -194,7 +193,6 @@ async function writeSave() {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     renew();
     await Promise.race([frame.contentWindow.clubGame.flush(renew), stalled]);
-    state = 'saved';
     return true;
   } catch (error) {
     console.warn('本地存档写入失败', error);
@@ -211,10 +209,6 @@ async function writeSave() {
     clearTimeout(timeout);
     screenStatus.hidden = true;
   }
-}
-async function back() {
-  if (state === 'closing') return;
-  if (await closeGame()) { navigateBack(); protectStorage(); }
 }
 function fail(detail) {
   clearTimeout(recoveryTimer);
@@ -240,15 +234,12 @@ async function play() {
   }
   if (run !== generation) return;
   machine.classList.remove('entering');
-  state = 'playing';
+  if (state === 'entering') state = 'playing';
   curtain.hidden = true;
-  session.inert = false;
-  frame.focus();
-  frame.contentDocument?.querySelector('canvas')?.focus({preventScroll:true});
-  if (game.id === 'sanguo') {
-    for (const type of ['pointerdown','keydown']) {
-      frame.contentWindow.addEventListener(type, () => { hasPlayed = true; }, {capture:true, once:true});
-    }
+  session.inert = state === 'closing';
+  if (!leave.open && state === 'playing') {
+    frame.focus();
+    frame.contentDocument?.querySelector('canvas')?.focus({preventScroll:true});
   }
 }
 async function launch(choice) {
@@ -268,6 +259,7 @@ async function launch(choice) {
     return;
   }
   state = 'loading';
+  window.addEventListener('beforeunload', warnBeforeUnload);
   machine.dataset.layout = game.orientation === '横屏' ? 'landscape' : 'portrait';
   requestLandscape();
   openTab.href = './?game=' + game.id;
@@ -342,8 +334,16 @@ export function openGame(choice) {
 }
 export function restoreRoute() {
   const params = new URLSearchParams(location.search);
-  if (params.has('game')) launch(games.find(item => item.id === params.get('game')));
-  else if (state !== 'shelf') shelf();
+  if (params.has('game')) {
+    const choice = games.find(item => item.id === params.get('game'));
+    if (choice && !history.state?.clubEntry) {
+      // Direct game links need the same in-app Back destination as a shelf launch.
+      const gameUrl = location.href;
+      history.replaceState({selected:choice.id}, '', './#shelf');
+      history.pushState({clubEntry:true}, '', gameUrl);
+    }
+    launch(choice);
+  } else if (state !== 'shelf') shelf();
 }
 window.addEventListener('message', event => {
   if (!frame || event.source !== frame.contentWindow || event.origin !== location.origin ||
@@ -374,35 +374,42 @@ window.addEventListener('message', event => {
     fail(data.message === 'storage-unavailable' ? '浏览器未允许本地存档。请启用站点存储后重试。' : reason);
   }
 });
-function remindManualSave() {
-  if (leave.open) return;
+function requestExit() {
+  if (!game) { navigateBack(); return; }
+  if (leave.open || state === 'closing' || state === 'leaving') return;
   syncFailed = false;
-  document.querySelector('#leave-title').textContent = '返回卡带架？';
-  document.querySelector('#leave-note').textContent = '如需手动存档，请先在游戏内打开「设置 → 保存进度」，选择存档位。';
+  document.querySelector('#leave-title').textContent = '退出《' + game.title + '》？';
+  document.querySelector('#leave-note').textContent = game.exitNote || '退出后将返回卡带架。';
   document.querySelector('#exit').textContent = '返回卡带架';
   leave.showModal();
 }
 document.querySelectorAll('[data-back]').forEach(link => link.addEventListener('click', event => {
   event.preventDefault();
-  if (state === 'playing' && hasPlayed) remindManualSave();
-  else back();
+  requestExit();
 }));
-document.querySelector('#stay').onclick = () => { leave.close(); frame?.contentWindow.focus(); };
-document.querySelector('#exit').onclick = () => {
+function stayInGame() {
   leave.close();
-  if (syncFailed) { state = 'saved'; navigateBack(); } else back();
+  if (state === 'playing') frame?.contentWindow.focus();
+}
+document.querySelector('#stay').onclick = stayInGame;
+leave.addEventListener('cancel', event => { event.preventDefault(); stayInGame(); });
+document.querySelector('#exit').onclick = async () => {
+  if (!leave.open) return;
+  leave.close();
+  if (!syncFailed && ['entering','playing'].includes(state) && !await writeSave()) return;
+  generation++;
+  state = 'leaving';
+  window.removeEventListener('beforeunload', warnBeforeUnload);
+  navigateBack();
+  protectStorage();
 };
-window.addEventListener('popstate', async () => {
-  if (state === 'playing' && hasPlayed && !new URLSearchParams(location.search).has('game')) {
-    history.pushState({clubEntry:true}, '', './?game=' + game.id);
-    remindManualSave();
-    return;
-  }
-  if (state === 'playing' || state === 'closing') {
-    if (!await closeGame()) {
+window.addEventListener('popstate', () => {
+  if (game && state !== 'shelf' && state !== 'leaving') {
+    if (new URLSearchParams(location.search).get('game') !== game.id) {
       history.pushState({clubEntry:true}, '', './?game=' + game.id);
-      return;
+      requestExit();
     }
+    return;
   }
   restoreRoute();
 });
