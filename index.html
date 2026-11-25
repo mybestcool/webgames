@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1c315d">
+  <meta name="description" content="在放学后的窗边游戏台，挑一盘经典游戏卡带。在线玩《霸王的大陆》和《Triple Town》。">
+  <title>放学卡带社</title>
+  <link rel="icon" href="assets/club.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="club.css"><link rel="stylesheet" href="player.css">
+  <link rel="manifest" href="club.webmanifest">
+  <link rel="apple-touch-icon" href="assets/club-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script type="module" src="catalog.js"></script>
+</head>
+<body>
+  <main id="club-lobby">
+    <header class="poster">
+      <div class="poster-inner">
+        <img class="room" src="assets/window-1000.webp" srcset="assets/window-600.webp 600w, assets/window-1000.webp 1000w, assets/window-1536.webp 1536w" sizes="(max-width: 650px) 114vw, 60vw" alt="" fetchpriority="high">
+        <div class="imprint" lang="en"><i aria-hidden="true"></i>After School Game Club</div>
+        <h1><img class="wordmark" src="assets/wordmark.webp" alt="放学卡带社" width="870" height="527"></h1>
+        <a class="jump" href="#shelf">选游戏 <span aria-hidden="true">↓</span></a>
+        <div class="trim" aria-hidden="true"></div>
+      </div>
+    </header>
+    <aside class="install-panel" id="install-panel" aria-label="安装放学卡带社" hidden>
+      <div class="install-inner">
+        <img src="assets/club-192.png" width="44" height="44" alt="">
+        <div class="install-copy"><strong>把卡带社装到桌面</strong><span>缓存过的卡带，离线也能玩。</span></div>
+        <button type="button" id="install-app"><span aria-hidden="true">↓</span> 安装到桌面</button>
+        <div id="install-help" hidden><p role="status"></p><button type="button" id="already-installed">已安装，收起提示</button></div>
+      </div>
+    </aside>
+    <section id="shelf" class="shelf" aria-labelledby="shelf-title">
+      <header class="shelf-heading"><h2 id="shelf-title" tabindex="-1">卡带架</h2><span id="count"></span></header>
+      <div class="rows" id="rows"></div>
+      <noscript>请启用 JavaScript 以载入游戏卡带。</noscript>
+      <aside class="offline-tools" hidden>
+        <span id="club-version"></span>
+        <span id="offline-status" role="status">正在检查离线卡带…</span>
+        <button type="button" id="cache-all">缓存全部卡带</button>
+        <div class="cache-meter"><progress id="cache-progress" aria-label="全部卡带下载进度" max="100" value="0" hidden></progress><span id="cache-detail" hidden></span></div>
+      </aside>
+    </section>
+  </main>
+  <main class="machine" hidden>
+    <div class="session" inert>
+      <div class="game-controls" role="group" aria-label="游戏窗口控制">
+        <button type="button" class="float-back" data-back aria-label="返回卡带架" title="返回卡带架">‹</button>
+        <button type="button" id="toggle-fullscreen" aria-label="全屏游玩" aria-pressed="false" title="全屏游玩">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path class="expand" d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/><path class="contract" d="M4 9h5V4m6 0v5h5M9 20v-5H4m11 5v-5h5"/></svg>
+        </button>
+      </div>
+      <div class="bay" id="bay"></div>
+    </div>
+    <p id="screen-status" role="status" hidden></p>
+    <div class="power-on" aria-hidden="true"></div>
+    <section class="curtain" aria-label="卡带启动">
+      <div class="ticket">
+        <div class="tv"><img id="tune" alt="" width="816" height="568"><a class="back-link" data-back href="./#shelf">← 卡带架</a></div>
+        <div class="ticket-info">
+          <h1 class="game-name"></h1><p id="edition"></p>
+          <div class="boot-info">
+            <h2 id="state-title" aria-live="polite">正在载入卡带</h2>
+            <p id="status" role="status">正在打开游戏…</p>
+            <div id="meter" hidden><span id="percent" aria-hidden="true"></span><div class="meter-track"><progress aria-labelledby="status" max="100"></progress></div></div>
+            <p class="hint" id="hint" hidden></p>
+            <div class="boot-actions">
+              <button class="action" id="proceed" hidden type="button"></button>
+              <a class="secondary" id="open-game-tab" target="_blank" rel="noopener" hidden>在浏览器中打开</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <dialog id="leave" aria-labelledby="leave-title" aria-describedby="leave-note"><h2 id="leave-title"></h2><p id="leave-note"></p><div class="dialog-buttons"><button id="stay" class="secondary" autofocus>留在游戏</button><button id="exit" class="action"></button></div></dialog>
+    <noscript>请启用 JavaScript 后再进入游戏。<a href="./">返回卡带架</a></noscript>
+  </main>
+  <template id="game-row">
+    <a class="game-row">
+      <img class="cartridge" alt="" width="128" height="101">
+      <span class="identity"><strong class="game-title"></strong><span class="subtitle"></span><small class="game-version"></small></span>
+      <span class="orientation"><i class="device" aria-hidden="true"></i><span class="direction"></span></span>
+      <span class="description"></span>
+      <span class="play-key" aria-hidden="true"><i></i>开玩</span>
+    </a>
+  </template>
+</body>
+</html>

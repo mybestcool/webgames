@@ -1,0 +1,21 @@
+苔光小镇 / Mosslight Town
+
+Runtime: Godot Engine, MIT license. See GODOT-LICENSE.txt.
+The game is built with Godot 4.7.2, GDScript, Compatibility renderer.
+
+Chinese typeface: ZCOOL XiaoWei, SIL Open Font License 1.1.
+See FONT-LICENSE.txt.
+
+Web resource decoder: brotli-dec-wasm 2.3.0, MIT license.
+Source: https://github.com/ustclug-dev/brotli-dec-wasm
+See vendor/brotli/LICENSE.txt. Decoder files are served by this site.
+
+Announcer voice: John Carroll, Announcer Voice Pack.
+Source: https://johncarroll.itch.io/announcer-voice-pack
+The author permits personal and commercial project use, without required credit.
+Great / Excellent / Amazing are used within this game; no standalone voice pack
+is offered here. This notice does not grant independent reuse of those recordings.
+
+Other music and gameplay sound effects: originally synthesized for this project.
+Artwork: original project illustrations, with AI-assisted production.
+Game title is a working title. No affiliation with Triple Town or Tiny Glade.

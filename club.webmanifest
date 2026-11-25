@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "放学卡带社",
+  "short_name": "放学卡带社",
+  "lang": "zh-CN",
+  "description": "在窗边游戏台离线玩经典小游戏。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "related_applications": [{"platform":"webapp","url":"./club.webmanifest","id":"https://after-school-cartridge-club.myownmatrix.chatgpt.site/"}],
+  "background_color": "#1c315d",
+  "theme_color": "#1c315d",
+  "icons": [
+    {"src":"assets/club-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/club-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"assets/club-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}
