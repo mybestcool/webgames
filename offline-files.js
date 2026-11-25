@@ -1,7 +1,7 @@
 self.CLUB_FILES = {
   "shell": {
-    "label": "1.4.1",
-    "version": "23e8bb0041d5633cbe19",
+    "label": "1.4.2",
+    "version": "46b0e69fa28baa0f875b",
     "files": {
       "assets/club-192.png": {
         "size": 2103,
@@ -97,14 +97,14 @@ self.CLUB_FILES = {
       },
       "app-version.js": {
         "size": 76,
-        "sha256": "f6f5c2c5f14c4f96158e44465b231474c56927321aa73b0d6ebe60ebdd23ada9"
+        "sha256": "0fe365ba4256160b03a91e20bf0fe3b085b2a96082657d09abe067280d0f47ed"
       }
     }
   },
   "games": {
     "sanguo": {
-      "label": "1.1.0",
-      "version": "2bb4cfff9cc9906781c0",
+      "label": "1.1.1",
+      "version": "a6b9f484a810bf6abffd",
       "files": {
         "games/sanguo/data.0dc553352dc4e26f.br.bin": {
           "size": 8388608,
@@ -116,11 +116,11 @@ self.CLUB_FILES = {
         },
         "games/sanguo/index.html": {
           "size": 1497,
-          "sha256": "b0796c1189da13c87e63c48d03a1c10105b55f0551b55517ee99f13c539a69fe"
+          "sha256": "c8d324da7762d5dd2093fb136ee071ae576127152e16eac1368e11edf0610424"
         },
         "games/sanguo/release.json": {
           "size": 1523,
-          "sha256": "41f96594c5797f63cf6ece0a9b1961aeea9fb4bc6085b8350b3b9a3c3b907274"
+          "sha256": "cdf8d5a4d495a52eabe2975b09430241507e3fd27451af8cbb89c5013c261449"
         },
         "shared/audio.position.worklet.09a11e888227f63f.js": {
           "size": 3123,
@@ -130,9 +130,9 @@ self.CLUB_FILES = {
           "size": 7298,
           "sha256": "5b476a9c9ce642c0ee4256436d1bc31d9c38f868aca0f9a8e2a57c18d2dec2a3"
         },
-        "shared/boot.fddcdbcf704ecccb.js": {
-          "size": 5006,
-          "sha256": "fddcdbcf704ecccb7c36d52ecf46109247c417937f59e64762f06dd6ffed3ce7"
+        "shared/boot.0d49cfb0c33cfde6.js": {
+          "size": 5396,
+          "sha256": "0d49cfb0c33cfde6aca2734b002d6304ab6701df8fc21682795c2b15b6c7caf5"
         },
         "shared/decode-worker.ebb8e56a0ec16fb3.js": {
           "size": 524,
@@ -173,8 +173,8 @@ self.CLUB_FILES = {
       }
     },
     "town": {
-      "label": "1.1.0",
-      "version": "9e643c33dc7f882ef5d0",
+      "label": "1.1.1",
+      "version": "c7b0895f4ccac095ae2f",
       "files": {
         "games/town/data.11bf2f37953d012f.br.bin": {
           "size": 8388608,
@@ -186,11 +186,11 @@ self.CLUB_FILES = {
         },
         "games/town/index.html": {
           "size": 1504,
-          "sha256": "abd6e2820ff84b6b7c5021343f1e48b04622bcec542f8c3c77155a777ee4ca68"
+          "sha256": "16d18099b9da68aaf5944ecba2c8ae9b1e6853c62bd4341b017177f68867d2b2"
         },
         "games/town/release.json": {
           "size": 1587,
-          "sha256": "05be0a0629a9fccf0d5a077d443e900583c5f4aa886216063e4316b8ed0652f8"
+          "sha256": "f4620118d8be72e3e79fcff9067bacaf5612d3895be7bc0aa4d635969b338cd0"
         },
         "shared/audio.position.worklet.09a11e888227f63f.js": {
           "size": 3123,
@@ -200,9 +200,9 @@ self.CLUB_FILES = {
           "size": 7298,
           "sha256": "5b476a9c9ce642c0ee4256436d1bc31d9c38f868aca0f9a8e2a57c18d2dec2a3"
         },
-        "shared/boot.fddcdbcf704ecccb.js": {
-          "size": 5006,
-          "sha256": "fddcdbcf704ecccb7c36d52ecf46109247c417937f59e64762f06dd6ffed3ce7"
+        "shared/boot.0d49cfb0c33cfde6.js": {
+          "size": 5396,
+          "sha256": "0d49cfb0c33cfde6aca2734b002d6304ab6701df8fc21682795c2b15b6c7caf5"
         },
         "shared/decode-worker.ebb8e56a0ec16fb3.js": {
           "size": 524,

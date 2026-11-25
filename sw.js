@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./offline-files.js?build=fc7f6a1f2ca4b921f4a4');
+importScripts('./offline-files.js?build=bd4704b3caf9eda53a6c');
 
 const root = self.registration.scope;
 const prefix = 'after-school-v1:' + new URL(root).pathname + ':';
